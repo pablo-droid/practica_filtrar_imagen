@@ -57,6 +57,10 @@ p {
     padding: 10px;
 }
 
+.img-button {
+    border: none;
+}
+
 .main-card {
     margin: 20px;
 }

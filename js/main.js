@@ -53,9 +53,11 @@ const imageData = [
 ];
 
 const fragmment = document.createDocumentFragment();
-const buttonSection = document.querySelector(".tag-list");
-const mainDisplaySection = document.querySelector("#main-display");
-const gallerySection = document.querySelector("#gallery");
+const tagList = document.querySelector(".tag-list");
+const mainDisplay = document.querySelector("#main-display");
+const gallery = document.querySelector("#gallery");
+
+let galleryInstance = [];
 
 function getTagSet() {
     const tags = new Set();
@@ -82,46 +84,64 @@ function createButtons() {
         button.dataset.tag = tag;
         fragmment.appendChild(button);
     }
-    buttonSection.appendChild(fragmment);
+    tagList.appendChild(fragmment);
 }
 createButtons();
 
-buttonSection.addEventListener("click", (event)=>{
-    mainDisplaySection.innerHTML = "";
-    gallerySection.innerHTML = "";
-
-    const tag = event.target.dataset.tag;
-    const images = getTaggedImagesWithTag(tag);
+function updateGallery(imageArray) {
+    mainDisplay.innerHTML = "";
+    gallery.innerHTML = "";
 
     const paragraph = document.createElement("P");
     paragraph.classList.add("flex-container");
     paragraph.classList.add("flex-start");
     paragraph.classList.add("tag-list");
-    const isPlural = images.length > 1;
-    paragraph.innerHTML = `se a${isPlural ? "n" : ""} encontrado <strong>${images.length}</strong> imagen${isPlural ? "es" : ""} con el tag <strong>${tag}</strong>`
-    mainDisplaySection.appendChild(paragraph);
+    const isPlural = imageArray.length > 1;
+    paragraph.innerHTML = `se a${isPlural ? "n" : ""} encontrado <strong>${imageArray.length}</strong> imagen${isPlural ? "es" : ""} con el tag <strong>${tag}</strong>`
+    mainDisplay.appendChild(paragraph);
 
-    images.forEach((image, index)=>{
-        const divSection = document.createElement("DIV");
-        const h3Section = document.createElement("H3");
-        h3Section.innerText = image.title
-        const divImgSection = document.createElement("DIV");
-        const imgSection = document.createElement("IMG");
-        imgSection.src = image.imgPath;
-        imgSection.alt = image.imgAlt;
+    imageArray.forEach((image, index)=>{
+        const div = document.createElement("DIV");
+        const h3 = document.createElement("H3");
+        h3.innerText = image.title;
+        const divImg = document.createElement("BUTTON");
+        divImg.classList.add("img-button");
+        const img = document.createElement("IMG");
+        img.src = image.imgPath;
+        img.alt = image.imgAlt;
+        img.dataset.index = index;
 
-        divSection.appendChild(h3Section);
-        divImgSection.appendChild(imgSection);
-        divSection.appendChild(divImgSection);
+        div.appendChild(h3);
+        divImg.appendChild(img);
+        div.appendChild(divImg);
 
         if (index === 0) {
-            divSection.classList.add("main-card");
-            mainDisplaySection.appendChild(divSection);
+            div.classList.add("main-card");
+            mainDisplay.appendChild(div);
         } else {
-            divSection.classList.add("other-card");
-            fragmment.appendChild(divSection);
+            div.classList.add("other-card");
+            fragmment.appendChild(div);
         }
     });
 
-    gallerySection.appendChild(fragmment);
+    gallery.appendChild(fragmment);
+}
+
+tagList.addEventListener("click", (event)=>{
+    if (event.target.dataset.tag === undefined) {
+        return;
+    }
+
+    const tag = event.target.dataset.tag;
+    galleryInstance = getTaggedImagesWithTag(tag);
+
+    updateGallery(galleryInstance);
+});
+
+gallery.addEventListener("click", (event)=>{
+    if (event.target.dataset.index === undefined) {
+        return;
+    }
+    [galleryInstance[0], galleryInstance[event.target.dataset.index]] = [galleryInstance[event.target.dataset.index], galleryInstance[0]];
+    updateGallery(galleryInstance);
 });
