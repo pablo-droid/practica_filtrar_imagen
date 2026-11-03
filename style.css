@@ -1,6 +1,8 @@
 * {
     margin: 0;
     padding: 0;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
     box-sizing: border-box;
 }
 
@@ -58,10 +60,12 @@ p {
 }
 
 .img-button {
+    width: 100%;
     border: none;
 }
 
 .main-card {
+    width: 100%;
     margin: 20px;
 }
 
@@ -81,27 +85,7 @@ p {
     padding: 10px;
 }
 
-.card {
-    display: flex;
-    flex-direction: column;
-    border-style: dotted;
-    border-color: orange;
-    border-radius: 10px;
-    padding: 10px;
-    width: 100%;
-}
-
-.card div,
-.card h3,
-.card p {
-    padding: 10px;
-}
-
 @media screen and (width > 768px) {
-    .card {
-        width: 33%;
-    }
-
     h1 {
         font-size: 3rem;
     }
@@ -120,5 +104,5 @@ p {
 
     .filter-button {
         font-size: 1.5rem;
-}
+    }
 }

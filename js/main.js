@@ -12,7 +12,7 @@ const imageData = [
         "assets/viajes/viajes-1.jpg",
         "viaje 1",
         "viaje 1",
-        ["cosa", "mar", "arena"],
+        ["cosa", "mar", "arena", "ñ"],
     ),
     new TaggedImage(
         "assets/viajes/viajes-2.jpg",
