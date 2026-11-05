@@ -62,13 +62,15 @@ const IMAGE_CARDS = [
 const fragmment = document.createDocumentFragment();
 
 /** @type {HTMLDivElement | null} */
-const tagList = document.querySelector(".tag-list");
+const tagList = document.querySelector("#button-list");
 /** @type {HTMLDivElement | null} */
 const mainDisplay = document.querySelector("#main-display");
 /** @type {HTMLDivElement | null} */
 const gallery = document.querySelector("#gallery");
 /** @type {HTMLDivElement | null} */
 const foundTagParagraph = document.querySelector("#found-tag-paragraph");
+/** @type {HTMLDivElement | null} */
+const searchBox = document.querySelector("#search-box");
 
 /** @type {Array<TaggedImage>} */
 let galleryInstance = [];
@@ -91,12 +93,18 @@ function getTagSet(imageData) {
 /**
  * Used to filter image cards that contain a certain tag.
  * @param {Array<TaggedImage>} imageData An array of cards.
- * @param {String} tag The tag used to filter.
+ * @param {Array<String>} tagArray The tags used to filter.
  * @returns Array of image card objects that contain tag.
  */
-function getTaggedImagesWithTag(imageData, tag) {
+function getTaggedImagesWithTags(imageData, tagArray) {
     return imageData.filter((data)=>{
-        return data.tags.includes(tag);
+        let tagFound = false;
+        for (let tag of tagArray) {
+            if (data.tags.includes(tag)) {
+                return true;
+            }
+        }
+        return false;
     });
 }
 
@@ -130,14 +138,6 @@ function updateGallery(imageArray) {
     mainDisplay.innerHTML = "";
     gallery.innerHTML = "";
 
-    //const paragraph = document.createElement("P");
-    //paragraph.classList.add("flex-container");
-    //paragraph.classList.add("flex-start");
-    //paragraph.classList.add("tag-list");
-    //const isPlural = imageArray.length > 1;
-    //paragraph.innerHTML = `se a${isPlural ? "n" : ""} encontrado <strong>${imageArray.length}</strong> imagen${isPlural ? "es" : ""} con el tag <strong>${tag}</strong>`
-    //mainDisplay.appendChild(paragraph);
-
     imageArray.forEach((image, index)=>{
         const divElement = document.createElement("div");
         const h3Element = document.createElement("h3");
@@ -165,6 +165,27 @@ function updateGallery(imageArray) {
     gallery.appendChild(fragmment);
 }
 
+
+/**
+ * Updates the gallery and prints a paragraph with search info.
+ * @param {Array<String>} tagArray 
+ */
+const displayGallery = (tagArray)=>{
+    galleryInstance = getTaggedImagesWithTags(IMAGE_CARDS, tagArray);
+    updateGallery(galleryInstance);
+
+    if (foundTagParagraph) {
+        if (galleryInstance.length <= 0) {
+            foundTagParagraph.innerHTML = "";
+        } else {
+            const isImgPlural = galleryInstance.length > 1;
+            const isMultiTag = tagArray.length > 1;
+            const tagString = tagArray.join(", ");
+            foundTagParagraph.innerHTML = `se a${isImgPlural ? "n" : ""} encontrado <strong>${galleryInstance.length}</strong> imagen${isImgPlural ? "es" : ""} con ${isMultiTag ? "los tags" : "el tag"} <strong>${tagString}</strong>`;
+        }
+    }
+}
+
 /**
  * Handles click events for the button list. 
  * Updates the gallery retrieving the tag from the clicked button.
@@ -173,13 +194,7 @@ tagList?.addEventListener("click", (event)=>{
     const targetElement = /** @type {HTMLElement | null} */ (event.target);
     const tag = targetElement?.dataset.tag;
     if (tag) {
-        galleryInstance = getTaggedImagesWithTag(IMAGE_CARDS, tag);
-        updateGallery(galleryInstance);
-
-        if (foundTagParagraph) {
-            const isPlural = galleryInstance.length > 1;
-            foundTagParagraph.innerHTML = `se a${isPlural ? "n" : ""} encontrado <strong>${galleryInstance.length}</strong> imagen${isPlural ? "es" : ""} con el tag <strong>${tag}</strong>`;
-        }
+        displayGallery([tag]);
     }
 });
 
@@ -195,4 +210,16 @@ gallery?.addEventListener("click", (event)=>{
     }
     [galleryInstance[0], galleryInstance[index]] = [galleryInstance[index], galleryInstance[0]];
     updateGallery(galleryInstance);
+});
+
+/**
+ * Handles searchbar input. Converts user input into a valid set of tags and displays them.
+ */
+searchBox?.addEventListener("input", (event)=>{
+    const userTagArray = event.target.value.split(" ");
+    const validTagSet = getTagSet(IMAGE_CARDS);
+    const userTagSet = new Set(userTagArray.filter((tag)=>{
+        return validTagSet.has(tag);
+    }));
+    displayGallery([...userTagSet]);
 });
