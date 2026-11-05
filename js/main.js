@@ -1,4 +1,11 @@
 class TaggedImage {
+    /**
+     * Constructs a tagged image card.
+     * @param {String} inImgPath 
+     * @param {String} inImgAlt 
+     * @param {String} inTitle 
+     * @param {Array<String>} inTags
+     */
     constructor(inImgPath, inImgAlt, inTitle, inTags) {
         this.imgPath = inImgPath;
         this.imgAlt = inImgAlt;
@@ -7,7 +14,7 @@ class TaggedImage {
     }
 };
 
-const imageData = [
+const IMAGE_CARDS = [
     new TaggedImage(
         "assets/viajes/viajes-1.jpg",
         "viaje 1",
@@ -53,13 +60,25 @@ const imageData = [
 ];
 
 const fragmment = document.createDocumentFragment();
-const tagList = document.querySelector(".tag-list");
-const mainDisplay = document.querySelector("#main-display");
-const gallery = document.querySelector("#gallery");
 
+/** @type {HTMLDivElement | null} */
+const tagList = document.querySelector(".tag-list");
+/** @type {HTMLDivElement | null} */
+const mainDisplay = document.querySelector("#main-display");
+/** @type {HTMLDivElement | null} */
+const gallery = document.querySelector("#gallery");
+/** @type {HTMLDivElement | null} */
+const foundTagParagraph = document.querySelector("#found-tag-paragraph");
+
+/** @type {Array<TaggedImage>} */
 let galleryInstance = [];
 
-function getTagSet() {
+/**
+ * Returns a non repeating set of tags from an array of images with many tags.
+ * @param {Array<TaggedImage>} imageData An array of cards.
+ * @returns A Set of tags (strings).
+ */
+function getTagSet(imageData) {
     const tags = new Set();
     imageData.forEach((data)=>{
         data.tags.forEach((tag)=>{
@@ -69,79 +88,111 @@ function getTagSet() {
     return tags;
 }
 
-function getTaggedImagesWithTag(tag) {
+/**
+ * Used to filter image cards that contain a certain tag.
+ * @param {Array<TaggedImage>} imageData An array of cards.
+ * @param {String} tag The tag used to filter.
+ * @returns Array of image card objects that contain tag.
+ */
+function getTaggedImagesWithTag(imageData, tag) {
     return imageData.filter((data)=>{
         return data.tags.includes(tag);
     });
 }
 
-function createButtons() {
-    const tags = getTagSet();
-    for (tag of tags) {
+/**
+ * Creates tag buttons and adds them to the DOM.
+ * Buttons store the tag they own using dataset.tag
+ * @param {Array<TaggedImage>} imageData An array of cards.
+ */
+function createButtons(imageData) {
+    const tags = getTagSet(imageData);
+    for (let tag of tags) {
         const button = document.createElement("BUTTON");
         button.classList.add("filter-button");
         button.innerText = tag;
         button.dataset.tag = tag;
         fragmment.appendChild(button);
     }
-    tagList.appendChild(fragmment);
+    tagList?.appendChild(fragmment);
 }
-createButtons();
+createButtons(IMAGE_CARDS);
 
+/**
+ * Displays an array of image cards creating the necessary elements and adding them to the DOM.
+ * The first element of the array will be displayed as a large image.
+ * @param {Array<TaggedImage>} imageArray An array of cards.
+ */
 function updateGallery(imageArray) {
+    if (!mainDisplay || !gallery)
+        return;
+
     mainDisplay.innerHTML = "";
     gallery.innerHTML = "";
 
-    const paragraph = document.createElement("P");
-    paragraph.classList.add("flex-container");
-    paragraph.classList.add("flex-start");
-    paragraph.classList.add("tag-list");
-    const isPlural = imageArray.length > 1;
-    paragraph.innerHTML = `se a${isPlural ? "n" : ""} encontrado <strong>${imageArray.length}</strong> imagen${isPlural ? "es" : ""} con el tag <strong>${tag}</strong>`
-    mainDisplay.appendChild(paragraph);
+    //const paragraph = document.createElement("P");
+    //paragraph.classList.add("flex-container");
+    //paragraph.classList.add("flex-start");
+    //paragraph.classList.add("tag-list");
+    //const isPlural = imageArray.length > 1;
+    //paragraph.innerHTML = `se a${isPlural ? "n" : ""} encontrado <strong>${imageArray.length}</strong> imagen${isPlural ? "es" : ""} con el tag <strong>${tag}</strong>`
+    //mainDisplay.appendChild(paragraph);
 
     imageArray.forEach((image, index)=>{
-        const div = document.createElement("DIV");
-        const h3 = document.createElement("H3");
-        h3.innerText = image.title;
-        const divImg = document.createElement("BUTTON");
-        divImg.classList.add("img-button");
-        const img = document.createElement("IMG");
-        img.src = image.imgPath;
-        img.alt = image.imgAlt;
-        img.dataset.index = index;
+        const divElement = document.createElement("div");
+        const h3Element = document.createElement("h3");
+        h3Element.innerText = image.title;
+        const divImgElement = document.createElement("button");
+        divImgElement.classList.add("img-button");
+        const imgElement = document.createElement("img");
+        imgElement.src = image.imgPath;
+        imgElement.alt = image.imgAlt;
+        imgElement.dataset.index = String(index);
 
-        div.appendChild(h3);
-        divImg.appendChild(img);
-        div.appendChild(divImg);
+        divElement.appendChild(h3Element);
+        divImgElement.appendChild(imgElement);
+        divElement.appendChild(divImgElement);
 
         if (index === 0) {
-            div.classList.add("main-card");
-            mainDisplay.appendChild(div);
+            divElement.classList.add("main-card");
+            mainDisplay.appendChild(divElement);
         } else {
-            div.classList.add("other-card");
-            fragmment.appendChild(div);
+            divElement.classList.add("other-card");
+            fragmment.appendChild(divElement);
         }
     });
 
     gallery.appendChild(fragmment);
 }
 
-tagList.addEventListener("click", (event)=>{
-    if (event.target.dataset.tag === undefined) {
-        return;
+/**
+ * Handles click events for the button list. 
+ * Updates the gallery retrieving the tag from the clicked button.
+ */
+tagList?.addEventListener("click", (event)=>{
+    const targetElement = /** @type {HTMLElement | null} */ (event.target);
+    const tag = targetElement?.dataset.tag;
+    if (tag) {
+        galleryInstance = getTaggedImagesWithTag(IMAGE_CARDS, tag);
+        updateGallery(galleryInstance);
+
+        if (foundTagParagraph) {
+            const isPlural = galleryInstance.length > 1;
+            foundTagParagraph.innerHTML = `se a${isPlural ? "n" : ""} encontrado <strong>${galleryInstance.length}</strong> imagen${isPlural ? "es" : ""} con el tag <strong>${tag}</strong>`;
+        }
     }
-
-    const tag = event.target.dataset.tag;
-    galleryInstance = getTaggedImagesWithTag(tag);
-
-    updateGallery(galleryInstance);
 });
 
-gallery.addEventListener("click", (event)=>{
-    if (event.target.dataset.index === undefined) {
+/**
+ * Handles clicking on images.
+ * It swaps the first and the clicked element in the galleryInstance array and redraws.
+ */
+gallery?.addEventListener("click", (event)=>{
+    const targetElement = /** @type {HTMLElement | null} */ (event.target);
+    const index = Number(targetElement?.dataset.index);
+    if (isNaN(index)) {
         return;
     }
-    [galleryInstance[0], galleryInstance[event.target.dataset.index]] = [galleryInstance[event.target.dataset.index], galleryInstance[0]];
+    [galleryInstance[0], galleryInstance[index]] = [galleryInstance[index], galleryInstance[0]];
     updateGallery(galleryInstance);
 });
